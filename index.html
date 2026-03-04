@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Margalla Link Road — Fill Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0e1a;--card:#161d2e;--border:#1e2d45;--accent:#f59e0b;--green:#10b981;--red:#ef4444;--text:#e2e8f0;--muted:#64748b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+header{background:linear-gradient(135deg,#0f172a,#1e293b);border-bottom:2px solid var(--accent);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.hl{display:flex;align-items:center;gap:12px;}
+.hi{width:44px;height:44px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.ht{font-family:'Bebas Neue';font-size:24px;letter-spacing:2px;}
+.hs{font-size:11px;color:var(--muted);margin-top:2px;}
+.hr{text-align:right;}
+.hd{font-family:'DM Mono';font-size:11px;color:var(--accent);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);padding:4px 10px;border-radius:6px;}
+.hu{font-size:10px;color:var(--muted);margin-top:3px;}
+.main{padding:20px 28px;max-width:1400px;margin:0 auto;}
+.info{background:rgba(16,185,129,.06);border:1px dashed rgba(16,185,129,.35);border-radius:8px;padding:9px 16px;margin-bottom:16px;font-size:12px;color:var(--green);display:flex;align-items:center;gap:8px;}
+
+/* TABS */
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.tab{padding:9px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;border:2px solid transparent;transition:all .18s;background:var(--card);letter-spacing:.5px;}
+.tab[data-t="all"]        {border-color:var(--muted);color:var(--muted);}
+.tab[data-t="0"]          {border-color:#3b82f6;color:#3b82f6;}
+.tab[data-t="1"]          {border-color:#10b981;color:#10b981;}
+.tab[data-t="2"]          {border-color:#f59e0b;color:#f59e0b;}
+.tab[data-t="3"]          {border-color:#ef4444;color:#ef4444;}
+.tab.active,.tab:hover    {color:#fff!important;}
+.tab[data-t="all"].active,.tab[data-t="all"]:hover   {background:var(--muted);border-color:var(--muted);}
+.tab[data-t="0"].active,.tab[data-t="0"]:hover       {background:#3b82f6;border-color:#3b82f6;}
+.tab[data-t="1"].active,.tab[data-t="1"]:hover       {background:#10b981;border-color:#10b981;}
+.tab[data-t="2"].active,.tab[data-t="2"]:hover       {background:#f59e0b;border-color:#f59e0b;}
+.tab[data-t="3"].active,.tab[data-t="3"]:hover       {background:#ef4444;border-color:#ef4444;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:transform .2s;}
+.kpi:hover{transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.blue::before{background:#3b82f6;}.kpi.green::before{background:#10b981;}
+.kpi.amber::before{background:var(--accent);}.kpi.red::before{background:var(--red);}
+.kpi.purple::before{background:#8b5cf6;}.kpi.teal::before{background:#14b8a6;}
+.kl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.kv{font-family:'Bebas Neue';font-size:28px;letter-spacing:1px;line-height:1;}
+.ks{font-size:10px;color:var(--muted);margin-top:3px;}
+.kpi.blue .kv{color:#3b82f6;}.kpi.green .kv{color:#10b981;}
+.kpi.amber .kv{color:var(--accent);}.kpi.red .kv{color:var(--red);}
+.kpi.purple .kv{color:#8b5cf6;}.kpi.teal .kv{color:#14b8a6;}
+.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;margin-top:4px;}
+.lag{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.ok{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3);}
+
+/* CHARTS ROW */
+.charts{display:grid;grid-template-columns:1fr 1.8fr;gap:14px;margin-bottom:16px;}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.ct{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;font-weight:600;}
+
+/* CONTRACTOR CARDS (ALL view) */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+.ccard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s;}
+.ccard:hover{transform:translateY(-3px);}
+.ccard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.ccard.c0::before,.ccard.c0:hover{border-color:#3b82f6;}.ccard.c0::before{background:#3b82f6;}
+.ccard.c1::before,.ccard.c1:hover{border-color:#10b981;}.ccard.c1::before{background:#10b981;}
+.ccard.c2::before,.ccard.c2:hover{border-color:#f59e0b;}.ccard.c2::before{background:#f59e0b;}
+.ccard.c3::before,.ccard.c3:hover{border-color:#ef4444;}.ccard.c3::before{background:#ef4444;}
+.cn{font-size:13px;font-weight:600;margin-bottom:2px;}
+.cs{font-size:10px;color:var(--muted);margin-bottom:10px;}
+.cqty{font-family:'DM Mono';font-size:10px;color:var(--muted);margin-bottom:7px;}
+.cpb{height:7px;border-radius:4px;background:#1e2d45;overflow:hidden;margin-bottom:7px;}
+.cpf{height:100%;border-radius:4px;}
+.crow{display:flex;justify-content:space-between;font-family:'DM Mono';font-size:11px;}
+.cpct{font-size:22px;font-family:'Bebas Neue';margin-top:6px;}
+.today-tag{display:inline-block;background:rgba(132,204,22,.15);color:#84cc16;border:1px solid rgba(132,204,22,.3);border-radius:10px;font-size:9px;font-weight:600;padding:1px 7px;margin-left:6px;vertical-align:middle;}
+.click-hint{font-size:9px;color:var(--muted);margin-top:8px;opacity:.6;}
+
+/* SINGLE CONTRACTOR VIEW */
+.single{display:none;}
+.single.active{display:block;}
+.all-view.hidden{display:none;}
+.s-header{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:20px;}
+.s-dot{width:14px;height:14px;border-radius:50%;}
+.s-name{font-family:'Bebas Neue';font-size:28px;letter-spacing:1px;}
+.s-sec{font-size:12px;color:var(--muted);margin-top:2px;}
+.s-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.s-charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr);}.cards{grid-template-columns:repeat(2,1fr);}.charts{grid-template-columns:1fr;}}
+@media(max-width:700px){.main{padding:12px;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.cards{grid-template-columns:1fr;}.s-kpis{grid-template-columns:repeat(2,1fr);}.s-charts{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hl">
+    <div class="hi">&#x1F6E3;</div>
+    <div>
+      <div class="ht">Margalla Link Road &mdash; Fill Dashboard</div>
+      <div class="hs">FWO &middot; 4 Contractors &middot; Earthwork Embankment &middot; Target: 18 March 2026</div>
+    </div>
+  </div>
+  <div class="hr">
+    <div class="hd" id="hdate"></div>
+    <div class="hu">Updated: 04 Mar 2026, 05:48 AM</div>
+  </div>
+</header>
+<div class="main">
+  <div class="info">&#x2705;&nbsp;<span>Gross: <b>898,453 m&#xB3;</b> &nbsp;&minus;&nbsp; Structure Deduction: <b>57,294 m&#xB3;</b> &nbsp;=&nbsp; Net Fill Target: <b>841,159 m&#xB3;</b></span></div>
+
+  <div class="tabs">
+    <div class="tab active" data-t="all">&#x1F4CB; Overall</div>
+    <div class="tab" data-t="0">1 &middot; Al Ajal Builders</div>
+    <div class="tab" data-t="1">2 &middot; BAS Construction</div>
+    <div class="tab" data-t="2">3 &middot; M. Shehzad Abbasi</div>
+    <div class="tab" data-t="3">4 &middot; Fazal Rehman</div>
+  </div>
+
+  <!-- ALL VIEW -->
+  <div class="all-view" id="allView">
+    <div class="kpi-grid" id="kpisAll"></div>
+    <div class="charts">
+      <div class="cc"><div class="ct">Overall Progress</div><div style="height:210px"><canvas id="gaugeC"></canvas></div></div>
+      <div class="cc"><div class="ct">Work Done vs Balance — All Contractors</div><div style="height:210px"><canvas id="barC"></canvas></div></div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <!-- SINGLE CONTRACTOR VIEW -->
+  <div class="single" id="singleView">
+    <div class="s-header" id="sHeader"></div>
+    <div class="s-kpis" id="sKpis"></div>
+    <div class="s-charts">
+      <div class="cc"><div class="ct">Progress</div><div style="height:220px"><canvas id="sGaugeC"></canvas></div></div>
+      <div class="cc"><div class="ct">Work Done vs Balance</div><div style="height:220px"><canvas id="sDoughC"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW=[
+  {c:"Al Ajal Builders",sec:"Section-1 (0+000 to 1+000)",qty:242029,wd:134499,da:0},
+  {c:"BAS Construction",sec:"Section-2 (1+000 to 2+000)",qty:349638,wd:195170,da:0},
+  {c:"M. Shehzad Abbasi",sec:"Section-3 (2+000 to 3+000)",qty:211523,wd:153071,da:0},
+  {c:"Fazal Rehman",sec:"Section-4 (3+000 to 3+750)",qty:95263,wd:42352,da:0}
+];
+const GROSS=898453;
+const STRUCT_DED=57294;
+const NET_TARGET=GROSS-STRUCT_DED;
+const TARGET_DATE=new Date('2026-03-18');
+const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444'];
+const TODAY=new Date();
+const REM=Math.max(0,Math.ceil((TARGET_DATE-TODAY)/86400000));
+
+RAW.forEach(r=>{r.twd=r.wd+r.da; r.bal=Math.max(0,r.qty-r.twd); r.pct=r.qty>0?r.twd/r.qty:0;});
+
+const fmt=n=>Math.round(n).toLocaleString();
+const pF=n=>(n*100).toFixed(1)+'%';
+const gc=p=>p>=0.7?'#10b981':p>=0.4?'#f59e0b':'#ef4444';
+
+document.getElementById('hdate').textContent=
+  TODAY.toLocaleDateString('en-PK',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+
+let charts={};
+function destroyChart(k){if(charts[k] instanceof Chart){charts[k].destroy();delete charts[k];}}
+
+let activeTab='all';
+
+// ── KPI helper ─────────────────────────────────────────
+function kpi(cls,label,val,sub){
+  return '<div class="kpi '+cls+'"><div class="kl">'+label+'</div><div class="kv">'+val+'</div><div class="ks">'+sub+'</div></div>';
+}
+
+// ── RENDER ALL VIEW ────────────────────────────────────
+function renderAll(){
+  const tw  = RAW.reduce((s,r)=>s+r.twd,0);
+  const tdA = RAW.reduce((s,r)=>s+r.da,0);
+  const tb  = Math.max(0,NET_TARGET-tw);
+  const pct = NET_TARGET>0?tw/NET_TARGET:0;
+  const dr  = REM>0?tb/REM:0;
+  const lag = pct<0.7;
+  const col = gc(pct);
+
+  document.getElementById('kpisAll').innerHTML=
+    kpi('blue',  'Net Target', fmt(NET_TARGET), 'm&#xB3; after struct deduction')+
+    kpi('green', 'Work Done',  fmt(tw),         'm&#xB3; cumulative')+
+    kpi('teal',  'Today Added',fmt(tdA),         'm&#xB3; this update')+
+    kpi('red',   'Balance',    fmt(tb),           'm&#xB3; remaining')+
+    kpi('amber', 'Progress',   pF(pct),           'of net target')+
+    kpi('purple','Rem. Days',  REM,               'to 18 Mar 2026<br><span class="bdg '+(lag?'lag':'ok')+'">'+(lag?'LAGGING':'ON TRACK')+'</span>');
+
+  // Gauge
+  destroyChart('gauge');
+  charts['gauge']=new Chart(document.getElementById('gaugeC'),{
+    type:'doughnut',
+    data:{datasets:[{data:[pct,1-pct],backgroundColor:[col,'#1e2d45'],borderWidth:0,circumference:180,rotation:270}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'75%',plugins:{legend:{display:false},tooltip:{enabled:false}}},
+    plugins:[{id:'gt',afterDraw(ch){
+      const{ctx,chartArea:{top,width,height}}=ch;
+      ctx.save();
+      ctx.font="bold 30px 'Bebas Neue'";ctx.fillStyle=col;ctx.textAlign='center';
+      ctx.fillText((pct*100).toFixed(1)+'%',width/2,top+height*0.84);
+      ctx.font="10px 'DM Sans'";ctx.fillStyle='#64748b';
+      ctx.fillText('OVERALL PROGRESS',width/2,top+height*0.97);
+      ctx.restore();
+    }}]
+  });
+
+  // Bar chart
+  destroyChart('bar');
+  charts['bar']=new Chart(document.getElementById('barC'),{
+    type:'bar',
+    data:{
+      labels:RAW.map(r=>r.c),
+      datasets:[
+        {label:'Work Done',data:RAW.map(r=>r.twd),backgroundColor:COLORS,borderRadius:5},
+        {label:'Balance',  data:RAW.map(r=>r.bal), backgroundColor:'rgba(30,45,69,0.9)',borderRadius:5}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#1e2d45'}},
+              y:{ticks:{color:'#64748b',callback:v=>fmt(v)},grid:{color:'#1e2d45'}}},
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}},
+        tooltip:{callbacks:{label(c){return ' '+c.dataset.label+': '+fmt(c.raw)+' m\u00B3';}}}}}
+  });
+
+  // Contractor cards
+  document.getElementById('cards').innerHTML=RAW.map((r,i)=>{
+    const col2=COLORS[i];
+    const bc=gc(r.pct);
+    const daTag=r.da>0?'<span class="today-tag">+'+fmt(r.da)+' today</span>':'';
+    return '<div class="ccard c'+i+'" onclick="switchTab(\''+i+'\')">'
+      +'<div class="cn">'+r.c+daTag+'</div>'
+      +'<div class="cs">'+r.sec+'</div>'
+      +'<div class="cqty">Total Qty: '+fmt(r.qty)+' m\u00B3</div>'
+      +'<div class="cpb"><div class="cpf" style="width:'+Math.min(r.pct*100,100)+'%;background:'+bc+'"></div></div>'
+      +'<div class="crow"><span style="color:'+col2+';font-weight:600">Done: '+fmt(r.twd)+' m\u00B3</span><span style="color:var(--muted)">Bal: '+fmt(r.bal)+' m\u00B3</span></div>'
+      +'<div class="cpct" style="color:'+bc+'">'+pF(r.pct)+'</div>'
+      +'<div class="click-hint">Click for details &rarr;</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── RENDER SINGLE CONTRACTOR VIEW ─────────────────────
+function renderSingle(i){
+  const r   = RAW[i];
+  const col = COLORS[i];
+  const bc  = gc(r.pct);
+  const dr  = REM>0?r.bal/REM:0;
+  const lag = r.pct<0.7;
+  const daTag = r.da>0?'<span class="today-tag">+'+fmt(r.da)+' today</span>':'';
+
+  document.getElementById('sHeader').innerHTML=
+    '<div class="s-dot" style="background:'+col+';width:40px;height:40px;border-radius:10px;flex-shrink:0"></div>'
+    +'<div><div class="s-name" style="color:'+col+'">'+r.c+daTag+'</div>'
+    +'<div class="s-sec">'+r.sec+'</div></div>'
+    +'<div style="margin-left:auto;text-align:right">'
+    +'<div style="font-family:\'Bebas Neue\';font-size:36px;color:'+bc+'">'+pF(r.pct)+'</div>'
+    +'<div style="font-size:11px;color:var(--muted)">of section target</div>'
+    +'</div>';
+
+  document.getElementById('sKpis').innerHTML=
+    kpi('blue',  'Section Qty', fmt(r.qty),  'm&#xB3; total assigned')+
+    kpi('green', 'Work Done',   fmt(r.twd),  'm&#xB3; cumulative')+
+    kpi('red',   'Balance',     fmt(r.bal),  'm&#xB3; remaining')+
+    kpi('teal',  'Daily Target',fmt(dr),      'm&#xB3;/day needed<br><span class="bdg '+(lag?'lag':'ok')+'">'+(lag?'LAGGING':'ON TRACK')+'</span>');
+
+  // Single gauge
+  destroyChart('sGauge');
+  charts['sGauge']=new Chart(document.getElementById('sGaugeC'),{
+    type:'doughnut',
+    data:{datasets:[{data:[r.pct,1-r.pct],backgroundColor:[bc,'#1e2d45'],borderWidth:0,circumference:180,rotation:270}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'75%',plugins:{legend:{display:false},tooltip:{enabled:false}}},
+    plugins:[{id:'sg',afterDraw(ch){
+      const{ctx,chartArea:{top,width,height}}=ch;
+      ctx.save();
+      ctx.font="bold 30px 'Bebas Neue'";ctx.fillStyle=bc;ctx.textAlign='center';
+      ctx.fillText((r.pct*100).toFixed(1)+'%',width/2,top+height*0.84);
+      ctx.font="10px 'DM Sans'";ctx.fillStyle='#64748b';
+      ctx.fillText(r.c.toUpperCase(),width/2,top+height*0.97);
+      ctx.restore();
+    }}]
+  });
+
+  // Done vs Balance doughnut
+  destroyChart('sDough');
+  charts['sDough']=new Chart(document.getElementById('sDoughC'),{
+    type:'doughnut',
+    data:{labels:['Work Done','Balance'],datasets:[{data:[r.twd,r.bal],backgroundColor:[col,'#1e2d45'],borderColor:'#161d2e',borderWidth:3,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11},padding:14}},
+        tooltip:{callbacks:{label(c){return ' '+c.label+': '+fmt(c.raw)+' m\u00B3';}}}}}
+  });
+}
+
+// ── TAB SWITCHING ──────────────────────────────────────
+function switchTab(t){
+  activeTab=t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelector('.tab[data-t="'+t+'"]').classList.add('active');
+
+  const allView    = document.getElementById('allView');
+  const singleView = document.getElementById('singleView');
+
+  if(t==='all'){
+    allView.classList.remove('hidden');
+    singleView.classList.remove('active');
+    renderAll();
+  } else {
+    allView.classList.add('hidden');
+    singleView.classList.add('active');
+    renderSingle(parseInt(t));
+  }
+}
+
+// Tab click handlers
+document.querySelectorAll('.tab').forEach(el=>{
+  el.addEventListener('click',()=>switchTab(el.dataset.t));
+});
+
+// Initial render
+renderAll();
+</script>
+</body>
+</html>
